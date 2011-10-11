@@ -1,0 +1,10 @@
+Package: dks
+Title: The double Kolmogorov-Smirnov package for evaluating multiple testing procedures. 
+Version: 0.99.1
+Author: Jeffrey T. Leek <jleek@jhsph.edu> 
+Description: The dks package consists of a set of diagnostic functions for multiple testing methods. The functions can be used to determine if the p-values produced by a multiple testing procedure are correct. These functions are designed to be applied to simulated data. The functions require the entire set of p-values from multiple simulated studies, so that the joint distribution can be evaluated.
+Maintainer: Jeffrey T. Leek <jleek@jhsph.edu>
+Depends: R (>= 2.8)
+Imports: cubature
+License: GPL
+biocViews: Bioinformatics,MultipleComparisons,QualityControl

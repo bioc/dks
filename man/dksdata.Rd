@@ -1,0 +1,1 @@
+ \name{dksdata} \docType{data} \alias{dksdata} \title{Simulated null p-values from the uniform distribution.} \description{ This data set can be used to illustrate the behavior of the functions in the dks package. P is a matrix of null p-values,  where each column corresponds to the p-values from a single study.  } \usage{P} \keyword{datasets}

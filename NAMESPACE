@@ -1,0 +1,6 @@
+importFrom(cubature, adaptIntegrate)
+export(cred.set)
+export(dks)
+export(dks.pvalue)
+export(pprob.dist)
+export(pprob.uniform)

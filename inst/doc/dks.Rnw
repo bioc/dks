@@ -1,0 +1,171 @@
+% \VignetteDepends{cubature}
+% \VignetteIndexEntry{dksTutorial}
+% \VignetteKeywords{Double Kolmogorov-Smirnov, double KS,multiple testing,null p-values}
+% \VignettePackage{dks}
+\documentclass[11pt]{article}
+
+\usepackage{epsfig}
+\usepackage{latexsym}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsfonts}
+\usepackage{amsxtra}
+\usepackage{graphicx}
+\usepackage{vmargin}
+
+
+
+\newcommand{\Robject}[1]{{\texttt{#1}}}
+\newcommand{\Rfunction}[1]{{\texttt{#1}}}
+\newcommand{\Rpackage}[1]{{\texttt{#1}}}
+\newcommand{\Rclass}[1]{{\texttt{#1}}}
+\newcommand{\Rmethod}[1]{{\texttt{#1}}}
+\newcommand{\Rfunarg}[1]{{\texttt{#1}}}
+
+\newenvironment{deff}[1][Definition]{\begin{trivlist} \item[\hskip \labelsep {\bfseries #1}]}{\end{trivlist}}
+\newcommand{\pr}{{\bf Pr}}
+
+\parindent 0in
+\setpapersize{USletter}
+\setmarginsrb{1truein}{0.5truein}{1truein}{0.5truein}{16pt}{30pt}{0pt}{20truept}
+\setlength{\emergencystretch}{2em}
+\usepackage{Sweave}
+\begin{document}
+
+\title{The \Rpackage{dks} package}
+\author{Jeffrey Leek \\
+Department of Biostatistics\\
+Johns Hopkins Bloomberg School of Public Health\\
+email: \texttt{jleek@jhsph.edu}}
+
+\maketitle
+\tableofcontents
+
+\section{Overview}
+
+The \Rpackage{dks} package contains functions for calculating Bayesian and Frequentist diagnostics for multiple testing p-values \cite{leek:2011aa}. 
+
+There are a large number of multiple testing procedures that have been proposed or are under development. However, there has not been a standard criteria for determining whether a multiple testing procedure produces ``correct'' p-values. \cite{leek:2011aa} proposed a new joint criterion for the null p-values from multiple tests. 
+
+\begin{deff} {\bf Joint Null Criterion} {\it A set of null p-values is correctly specified if the distribution of each ordered p-value is equal to the distribution of the corresponding order statistic from an independent sample of the same size from the U(0,1) distribution. If the null p-values are denoted $p_1,\ldots,p_{m_0}$ then}
+\begin{eqnarray}
+\pr(p_{(i)} < \alpha) = \pr(U_{(i)} < \alpha)
+\label{eq:cspvals}
+\end{eqnarray}
+{\it where $p_{(i)}$ is the $i$th ordered p-value and $U_{(i)}$ is the $i$th order statistic of a sample of size $m_0$ from the uniform distribution. }
+\end{deff}
+
+The Joint Null Criterion (JNC) specifies the joint behavior of a set of null p-values from a multiple testing study. This joint behavior is critical, since error estimates and significance calculation are performed on the single set of p-values obtained in any given study. 
+
+
+This document provides a tutorial for using the \texttt{dks} package to evaluate multiple testing procedures.  The package consists of the functions: \Rfunction{dks} for calculating both the Frequentist and Bayesian diagnostic tests proposed by \cite{leek:2011aa}, including diagnostic plots, \Rfunction{dks.pvalue} for computing the double Kolmogorov-Smirnov test that the null p-values are uniformly distributed, \Rfunction{pprob.uniform} for calculating the posterior probability a set of p-values are uniformly distributed, \Rfunction{pprob.dist} for calculating the posterior probability distribution of the Beta hyperparameters, and \Rfunction{cred.set} for calculating a credible set of the hyperparameters of the Beta distribution. As with any R package, detailed information on functions, their arguments, and values can be obtained from the help files. For instance, to view the help file for the function \Rfunction{dks} within R, type \texttt{? dks}. Here we will perform the set of diagnostic tests on a previously simulated null p-values. \\
+
+\section{Suggestions for P-value Simulation}
+
+We will use simulated null p-values to demonstrate the \Rpackage{dks}. In practice, null p-values should be simulated using the multiple testing method that is being evaluated. The simulated studies should contain tests that are both null and alternative, resulting in both null and alternative p-values. The simulated data sets should mimic the expected behavior of real data sets as closely as possible. Multiple simulated studies should be performed under random variation in the simulated parameters to give an idea of the range of behavior of null p-values from the multiple testing method. Only the null p-values should be passed to the functions in the \Rpackage{dks} package. 
+
+\section{Simulated P-values}
+
+We will demonstrate the functions using a simulated set of null p-values. The simulated null p-values come from 100 different simulated studies, and for each study there are 200 null p-values. The p-values are placed in a 200 $\times$ 100 matrix where each column corresponds to the set of null p-values for a single simulated study. 
+
+To load the data set type \texttt{data(dksdata)}, and to view a description of this data type \texttt{? dksdata}.   
+
+<<>>=
+library(dks)
+library(cubature)
+data(dksdata)
+dim(P)
+@
+
+
+\section{The \Rfunction{dks} function}
+
+The \Rfunction{dks} computes both the Frequentist and Bayesian diagnostic tests proposed in \cite{leek:2011aa}. The function accepts a matrix of simulated null p-values where each column corresponds to the simulated null p-values from a single study. For the Bayesian diagnostic criteria, it is possible to specify the range of the hyperparameters of the beta distribution. 
+
+<<dks1,fig=TRUE,include=FALSE>>=
+dks1 <- dks(P,plot=TRUE)
+@
+
+\begin{figure}[htp]
+ \begin{center}
+    \includegraphics[height=4in]{dks-dks1.pdf}
+  \end{center}
+  \caption{The diagnostic plots from the \Rfunction{dks} function. From left to right: (a) a quantile-quantile plot of the p-values for each study versus the uniform quantiles, these lines should be close to the 45$^\circ$ line,  (b) the empirical distribution function of the first level KS test p-values (blue) with confidence bands (grey), again the line should fall along the 45$^\circ$ line, and (c) a histogram of the posterior probabilities that each set of p-values is uniform these values should be near one. }
+  \end{figure}
+
+The double KS p-value is a nested KS-test against the uniform. First each study specific set of p-values is tested against the uniform and then the KS  test p-values are tested against the uniform. If the double KS p-value is large then the p-values produced by the multiple testing procedure appear to be uniform across simulated studies. For each study, the posterior probability that the p-values are uniform is also calculated. For uniform p-values these posterior probabilities should be near one. 
+
+The diagnostic plots are, from left to right:  (a) a quantile-quantile plot of the p-values for each study versus the uniform quantiles, these lines should be close to the 45$^\circ$ line,  (b) the empirical distribution function of the first level KS test p-values (blue) with confidence bands (grey), again the line should fall along the 45$^\circ$ line, and (c) a histogram of the posterior probabilities that each set of p-values is uniform these values should be near one. 
+
+\section{The \Rfunction{pprob.dist} function}
+
+The \Rfunction{pprob.dist} calculates the posterior distribution for the hyperparameters of the Beta distribution given the observed set of p-values. If the p-values are approximately uniform, then the posterior distribution should be concentrated at the values of (1,1). Figure \ref{figbeta} shows examples of the distribution functions for a range of values of $(\alpha, \beta)$. The parameter values $(\alpha,\beta) = (1,1)$ correspond to the uniform distribution (black), values of $\beta > 1$ and $\alpha < 1$ correspond to distributions that are stochastically smaller than the uniform (green), values of $\beta < 1$ and $\alpha > 1$ correspond to distributions that are stochastically larger than the uniform (blue), values of $\beta > 1$ and $\alpha > 1$ correspond to distributions in the center of the interval (purple), and values of $\beta < 1$ and $\alpha < 1$ correspond to distributions on the extremes of the interval (red). 
+
+\begin{figure}[htp]
+\begin{center}
+\includegraphics[height=3in]{betas2.pdf}
+\end{center}
+\caption{{\bf a.} The parameter space for the beta distribution, with different parameter combinations highlighted. {\bf b.} The beta density for the values of $(\alpha,\beta)$ highlighted in {\bf a}. The densities mimic the behavior of p-values observed in high-dimensional multiple testing experiments.}
+\label{figbeta}
+\end{figure}
+
+We use the code to calculate the posterior distribution for the p-values from the first study (the first column of $P$). In practice since each study may correspond to a different distribution of null p-values, it may be appropriate to calculate the posterior for each study. If it is expected that the p-values exhibit extreme behavior in one of the directions illustrated in Figure \ref{figbeta}, then the range of the parameters $\alpha$ and $\beta$ should be extended. 
+
+The function returns the posterior values at the grid points defined by (alpha[1] + i$\times$delta, beta[1] + j$\times$delta). We can plot the posterior distribution using the image command in R and put a dot at (1,1), which indicates the uniform distribution.
+
+<<pprob,fig=TRUE,include=FALSE>>=
+ ## Calculate the posterior distribution
+ delta <- 0.1
+  dist1 <- pprob.dist(P[,1])
+
+  ## Plot the posterior distribution
+  alpha <- seq(0.1,10,by=delta)
+  beta <- seq(0.1,10,by=delta)
+  pprobImage = image(log10(alpha),log10(beta),dist1,xaxt="n",yaxt="n",xlab="Alpha",ylab="Beta")
+  axis(1,at=c(-2,-1,0,1,2),labels=c("10^-2","10^-1","10^0","10^1","10^2"))
+  axis(2,at=c(-2,-1,0,1,2),labels=c("10^-2","10^-1","10^0","10^1","10^2"))
+  points(0,0,col="blue",cex=1,pch=19)	
+@
+
+\begin{figure}[htp]
+ \begin{center}
+    \includegraphics[width=4in,height=4in]{dks-pprob.pdf}
+  \end{center}
+  \caption{A plot of the posterior distribution from the observed example. The p-values are uniform and so the posterior distribution is centered at (1,1), indicated by the blue dot. }
+  \end{figure}
+
+
+
+\section{The \Rfunction{cred.set} function}
+
+The \Rfunction{cred.set} takes as input the computed distribution from the function \Rfunction{pprob.dist}. The grid size, delta, must be the same for both function calls. The user sets the level of the credible set, here we calculate a 80\% credible interval and since the p-values are approximately uniform the 80\% credible interval includes (1,1). 
+
+
+<<credSet,fig=TRUE,include=FALSE>>=
+ ## Calculate a 80% credible set
+  cred1 <- cred.set(dist1,delta=0.1, level=0.80)
+
+  ## Plot the posterior and the credible set
+  
+  alpha <- seq(0.1,10,by=delta)
+  beta <- seq(0.1,10,by=delta)
+
+  credImage=image(log10(alpha),log10(beta),cred1$cred,xaxt="n",yaxt="n",xlab="Alpha",ylab="Beta")
+  axis(1,at=c(-2,-1,0,1,2),labels=c("10^-2","10^-1","10^0","10^1","10^2"))
+  axis(2,at=c(-2,-1,0,1,2),labels=c("10^-2","10^-1","10^0","10^1","10^2"))
+  points(0,0,col="blue",cex=1,pch=19)	
+@
+\begin{figure}[htp]
+ \begin{center}
+    \includegraphics[width=4in,height=4in]{dks-credSet.pdf}
+  \end{center}
+  \caption{A plot of the 80\% credible set for the interval. The p-values are uniform and so the credible set includes (1,1), indicated by the blue dot. }
+\end{figure}
+
+
+\bibliographystyle{plain}
+\begin{thebibliography}{1}
+\bibitem{leek:2011aa} Leek J.T. and Storey J.D.\emph{The Joint Null Criterion for Multiple Hypothesis Tests}, SAGMB 10:28
+\end{thebibliography}
+
+\end{document}

@@ -1,7 +1,7 @@
 Package: dks
 Title: The double Kolmogorov-Smirnov package for evaluating multiple
         testing procedures.
-Version: 1.12.0
+Version: 1.13.0
 Author: Jeffrey T. Leek <jleek@jhsph.edu>
 Description: The dks package consists of a set of diagnostic functions
         for multiple testing methods. The functions can be used to
